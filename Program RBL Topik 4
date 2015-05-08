@@ -1,0 +1,119 @@
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <fstream>
+
+double const PI = 3.14159;
+
+using namespace std;
+
+int main(){
+
+int same;
+double sumNs;
+double sumNp;
+double NPAB, RNPAB;
+
+int Np = 10;                    //jumlah total partikel 1 batang
+double PAB = 0.1;               // Perbandingan antara jumlah partikel A dan B
+double NpA = Np*PAB;            //jumlah partikel A
+double NpB = Np*(1-PAB);        //jumlah partikel B
+
+int Ns = 10;                    //jumlah serat
+double kAA = 100;
+double kAB = 200;
+double kBB = 150;
+
+double Rp = 1;                      //jari jari partikel
+double Lo = 2*Rp*Np;                //panjang serat
+double Rb = (Ns/4)*Rp;              //jari jari batang
+double A = Rb*Rb*PI;                //luas penampang batang
+double E;
+
+//deklarasi jenis partikel
+string Namepar[Np];
+string Namepart[Ns][Np];
+string NparA = "A";
+string NparB = "B";
+
+//deklarasi array konstanta pegas
+double kpar[Ns][Np-1];
+
+ofstream fout;
+fout.open("Pegasplot.txt");
+fout << "k1 \t E1 \t k2 \t E2 \t k3 \t E3 \t k4 \t E4 \t k5 \t E5 \t c" << endl;
+    for(int k=0;k<=10;k++){              // iterasi per serat
+        for(int l = 0; l<5;l++){         //coba iterasi 1 serat 10x untuk perolehan data
+            sumNs = 0;
+            NpA = 0;
+            NpB = 0;
+            NPAB = PAB*k;
+            RNPAB = 1-NPAB;
+            NpA = Np*(PAB*k);
+            NpB = Np*(1-(PAB*k));
+
+            //set initial kombinasi serat
+            for(int i = 0; i<Np; i++){
+                if(NpA!=0){
+                    Namepar[i]=NparA;
+                    NpA = NpA-1;
+                }
+                else if(NpB!=0){
+                    Namepar[i]=NparB;
+                    NpB = NpB-1;
+                }
+            }
+            cout << endl;
+            cout << "No\t" << "Komposisi Partikel\t" << "Konstanta Pegas antar Partikel" <<endl;
+
+            //bagian shuffle, cek, display jenis jenis kombinasi serat
+            for(int j = 0; j<Ns;j++){
+                //numbering
+                cout<<j+1<<"\t";
+
+                //shuffling
+                shuffle:
+                random_shuffle(&Namepar[0],&Namepar[Np]);
+
+                //set array ke array 2 dimensi
+                for (int i = 0; i<Np;i++){
+                    Namepart[j][i]=Namepar[i];
+                }
+
+            //display jenis serat
+            for (int i = 0; i<Np;i++){
+                cout << Namepart[j][i]<<" ";
+            }
+            cout << "\t";
+
+            // cek konstanta pegas antar partikel tetangga
+            sumNp = 0;
+
+            for (int i = 0; i<Np-1; i ++){
+                if(Namepart[j][i]=="A" && Namepart[j][i+1]=="A"){
+                    kpar[j][i] = kAA;
+                } else if(Namepart[j][i]=="B" && Namepart[j][i+1]=="B"){
+                    kpar[j][i]=kBB;
+                } else {
+                    kpar[j][i]=kAB;
+                }
+                sumNp = sumNp + (1/kpar[j][i]);
+                cout << kpar[j][i] <<" ";
+            }
+            sumNs = sumNs + (1/sumNp);
+            cout<<endl;
+            }
+            E = (sumNs*Lo)/A;       //
+
+            cout << endl << "Konstanta Pegas Batang Komposit: "<< sumNs << endl;
+            cout << "Nilai E : " << E << endl;
+            cout << "Perbandingan Partikel A:B " << NPAB << ":" << RNPAB << endl << endl;
+
+            fout << sumNs << "\t" << E << "\t"; //konsentrasi di masukan juga, tinggal pakai rumus konsentrasi
+        }
+        fout << RNPAB << "\t" << endl;
+    }
+    fout.close();
+    return 0;
+}
+
